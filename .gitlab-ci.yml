@@ -1,0 +1,38 @@
+stages:
+  - build
+  - release
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "test"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application"
+      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+  # rules:
+  #   - changes:
+  #     - application/* 
+
+release:
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  stage: release
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+  # rules:
+  #   - changes:
+  #     - application/*
+  needs:
+    - job: build
