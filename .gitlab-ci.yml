@@ -48,5 +48,5 @@ deploy:
   image: bitnami/kubectl:latest
   stage: deploy
   script:
-    - kubectl config use-context ${CI_PROJECT_PATH}:<имя_GitLab_Agent>
+    - kubectl config use-context ${CI_PROJECT_PATH}:gitlab-agent
     - kubectl get pods
