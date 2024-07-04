@@ -9,9 +9,9 @@ variables:
   TARGET_PATH: "troyan.tar.gz"
 
 stages:
-  - build
+  # - build
   - release
-  - publish
+  # - publish
 
 # build:
 #   stage: build
