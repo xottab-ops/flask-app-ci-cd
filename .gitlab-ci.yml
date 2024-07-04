@@ -5,44 +5,44 @@ variables:
   URL: "${REPO_URL}/api/v4/projects/${GITLAB_REPO_PROJECT_ID}/repository/archive.tar.gz?sha=${REPO_BRANCH}"
 
 stages:
-  #- build
-  #- release
+  - build
+  - release
   - deploy 
 
-# build:
-#   stage: build
-#   image:
-#     name: gcr.io/kaniko-project/executor:v1.9.0-debug
-#     entrypoint: [""]
-#   script:
-#     - echo "test"
-#     - /kaniko/executor
-#       --context "${CI_PROJECT_DIR}/application"
-#       --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
-#       --build-arg VERSION=$VERSION
-#       --cache=true
-#   # rules:
-#   #   - changes:
-#   #     - application/* 
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "test"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application"
+      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+  rules:
+    - changes:
+      - application/* 
 
-# release:
-#   variables:
-#     GIT_STRATEGY: none
-#   image:
-#     name: gcr.io/go-containerregistry/crane:debug
-#     entrypoint: [ "" ]
-#   cache: [ ]
-#   stage: release
-#   before_script:
-#     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-#   script:
-#     - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
-#   # rules:
-#   #   - changes:
-#   #     - application/*
-#   needs:
-#     - job: build
+release:
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  stage: release
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+  rules:
+    - changes:
+      - application/*
+  needs:
+    - job: build
 
 deploy:
   stage: deploy
@@ -72,4 +72,5 @@ deploy:
     - mv "camp_helm-$REPO_BRANCH"* "$REPO_FOLDER_NAME"
     - cd "$REPO_FOLDER_NAME"  
     #deploy to the cluster 
-    #- helm upgrade --install ${HELM_CHART_NAME} . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace ${HELM_NAMESPACE}
+    - helm upgrade --install ${HELM_CHART_NAME} . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace ${HELM_NAMESPACE}
+  when: manual
