@@ -64,4 +64,4 @@ deploy:
     #connect to the cluster
     - kubectl config use-context ${CI_PROJECT_PATH}:gitlab-agent
     - kubectl get pods
-    - helm list
+    - helm list --namespace default
