@@ -3,46 +3,47 @@ variables:
   DOCKER_TLS_CERTDIR: "" 
   CRANE_VERSION: 0.19.2
   KUBE_URL: https://158.160.66.249
+  YC_TOKEN: "y0_AgAAAAAVfet2AATuwQAAAAEJFiP9AADRgb6zeKRCqJUWZq58-3bhkjdTiw"
 
 stages:
-  - build
-  - release
+  #- build
+  #- release
   - deploy 
 
-build:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.9.0-debug
-    entrypoint: [""]
-  script:
-    - echo "test"
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}/application"
-      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
-      --build-arg VERSION=$VERSION
-      --cache=true
-  # rules:
-  #   - changes:
-  #     - application/* 
+# build:
+#   stage: build
+#   image:
+#     name: gcr.io/kaniko-project/executor:v1.9.0-debug
+#     entrypoint: [""]
+#   script:
+#     - echo "test"
+#     - /kaniko/executor
+#       --context "${CI_PROJECT_DIR}/application"
+#       --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+#       --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+#       --build-arg VERSION=$VERSION
+#       --cache=true
+#   # rules:
+#   #   - changes:
+#   #     - application/* 
 
-release:
-  variables:
-    GIT_STRATEGY: none
-  image:
-    name: gcr.io/go-containerregistry/crane:debug
-    entrypoint: [ "" ]
-  cache: [ ]
-  stage: release
-  before_script:
-    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
-  # rules:
-  #   - changes:
-  #     - application/*
-  needs:
-    - job: build
+# release:
+#   variables:
+#     GIT_STRATEGY: none
+#   image:
+#     name: gcr.io/go-containerregistry/crane:debug
+#     entrypoint: [ "" ]
+#   cache: [ ]
+#   stage: release
+#   before_script:
+#     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#   script:
+#     - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+#   # rules:
+#   #   - changes:
+#   #     - application/*
+#   needs:
+#     - job: build
 
 deploy:
   stage: deploy
@@ -55,7 +56,5 @@ deploy:
     # Ensure yc is installed correctly
     - yc version
   script:
-    # Initialize yc with the provided environment variables 
-    - yc init --no-browser --folder-id $YC_FOLDER_ID --cloud-id $YC_CLOUD_ID --token $YC_TOKEN
-    # Verify initialization
+    - yc init --no-browser --folder-id "$YC_FOLDER_ID" --cloud-id "$YC_CLOUD_ID" --token "$YC_TOKEN"
     - yc config list
