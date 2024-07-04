@@ -42,6 +42,7 @@ release:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+    - set -x
     - | 
       #!/bin/bash
       # ACCESS_TOKEN=$(cat private_key) # предполагается, что ключ хранится в файле private_key
