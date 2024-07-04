@@ -1,0 +1,76 @@
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  DOCKER_TLS_CERTDIR: "" 
+  CRANE_VERSION: 0.19.2
+  URL: "${REPO_URL}/api/v4/projects/${GITLAB_REPO_PROJECT_ID}/repository/archive.tar.gz?sha=${REPO_BRANCH}"
+
+stages:
+  - build
+  - release
+  - deploy 
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "test"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application"
+      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+  rules:
+    - changes:
+      - application/* 
+
+release:
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  stage: release
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+  rules:
+    - changes:
+      - application/*
+  needs:
+    - job: build
+
+deploy:
+  stage: deploy
+  before_script:
+    #install curl
+    - apt-get update -y
+    - apt-get install curl gpg tar -y 
+    # Install kubectl
+    - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/kubectl
+    #install helm
+    - curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
+    - apt-get install apt-transport-https --yes
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+    - apt-get update -y 
+    - apt-get install helm -y
+  script:
+    #connect to the cluster
+    - kubectl config use-context ${CI_PROJECT_PATH}:${GITLAB_AGENT_NAME}
+    #download helm chart
+    - | 
+      curl -s -o "${ARCHIVE_NAME}.tar.gz" "$URL" \
+        --header "PRIVATE-TOKEN: ${GITLAB_CI_TOKEN}"
+    - tar -xzvf ${ARCHIVE_NAME}.tar.gz
+    - rm -rf "$REPO_FOLDER_NAME"
+    - mv "camp_helm-$REPO_BRANCH"* "$REPO_FOLDER_NAME"
+    - cd "$REPO_FOLDER_NAME"  
+    #deploy to the cluster 
+    - helm upgrade --install ${HELM_CHART_NAME} . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace ${HELM_NAMESPACE}
+  when: manual
