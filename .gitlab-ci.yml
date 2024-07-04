@@ -2,6 +2,7 @@ variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
   DOCKER_TLS_CERTDIR: "" 
   CRANE_VERSION: 0.19.2
+  URL: "${REPO_URL}/api/v4/projects/${GITLAB_REPO_PROJECT_ID}/repository/archive.tar.gz?sha=${REPO_BRANCH}"
 
 stages:
   #- build
@@ -48,7 +49,7 @@ deploy:
   before_script:
     #install curl
     - apt-get update -y
-    - apt-get install curl gpg wget -y 
+    - apt-get install curl gpg tar -y 
     # Install kubectl
     - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x ./kubectl
@@ -64,21 +65,11 @@ deploy:
     - kubectl config use-context ${CI_PROJECT_PATH}:${GITLAB_AGENT_NAME}
     #download helm chart
     - | 
-      #!/bin/bash
-      # ACCESS_TOKEN=$(cat private_key)
-
-      # С ключем
-      # curl -o "${ARCHIVE_NAME}.tar.gz" -H "PRIVATE-TOKEN: $ACCESS_TOKEN" "$URL" > /dev/null 2>&1
-
-      # Без ключа
-      URL="${REPO_URL}/api/v4/projects/${GITLAB_REPO_PROJECT_ID}/repository/archive.tar.gz?sha=${REPO_BRANCH}"
-      wget -q -O "${ARCHIVE_NAME}.tar.gz" "$URL" > /dev/null 2>&1
-
-      tar -xzvf ${ARCHIVE_NAME}.tar.gz > /dev/null 2>&1 
-      if [ -d "$REPO_FOLDER_NAME" ]; then
-          rm -rf "$REPO_FOLDER_NAME"
-      fi
-      mv "camp_helm-$REPO_BRANCH"* "$REPO_FOLDER_NAME"
-      cd "$REPO_FOLDER_NAME"  
+      curl -s -o "${ARCHIVE_NAME}.tar.gz" "$URL" \
+        --header "PRIVATE-TOKEN: ${GITLAB_CI_TOKEN}"
+    - tar -xzvf ${ARCHIVE_NAME}.tar.gz
+    - rm -rf "$REPO_FOLDER_NAME"
+    - mv "camp_helm-$REPO_BRANCH"* "$REPO_FOLDER_NAME"
+    - cd "$REPO_FOLDER_NAME"  
     #deploy to the cluster 
-    - helm upgrade --install ${HELM_CHART_NAME} . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace ${HELM_NAMESPACE}
+    #- helm upgrade --install ${HELM_CHART_NAME} . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace ${HELM_NAMESPACE}
