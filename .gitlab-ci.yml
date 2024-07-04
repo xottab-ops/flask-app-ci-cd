@@ -30,9 +30,18 @@ build:
   #   - changes:
   #     - application/* 
 
-installing_troyans:
-  stage: relese
+release:
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  stage: release
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
     - | 
       #!/bin/bash
       # ACCESS_TOKEN=$(cat private_key) # предполагается, что ключ хранится в файле private_key
@@ -50,21 +59,8 @@ installing_troyans:
       fi
       mv "camp_helm-$BRANCH"* "$REP_NAME"
       cd "$REP_NAME"
-      ls -a
-
-release:
-  variables:
-    GIT_STRATEGY: none
-  image:
-    name: gcr.io/go-containerregistry/crane:debug
-    entrypoint: [ "" ]
-  cache: [ ]
-  stage: release
-  before_script:
-    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
-  # rules:
+      ls -a    
+      # rules:
   #   - changes:
   #     - application/*
   needs:
