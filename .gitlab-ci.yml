@@ -90,4 +90,4 @@ deploy:
       cd "$REP_NAME"
       ls -a   
     #deploy to the cluster 
-    - helm upgrade --install haha-again . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION
+    - helm upgrade --install haha-again . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION --namespace default
