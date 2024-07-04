@@ -4,6 +4,7 @@ variables:
   CRANE_VERSION: 0.19.2
   KUBE_URL: https://158.160.66.249
   YC_TOKEN: "y0_AgAAAAAVfet2AATuwQAAAAEJFiP9AADRgb6zeKRCqJUWZq58-3bhkjdTiw"
+  OAUTH_TOKEN: "y0_AgAAAAAVfet2AATuwQAAAAEJFiP9AADRgb6zeKRCqJUWZq58-3bhkjdTiw"
 
 stages:
   #- build
@@ -56,5 +57,5 @@ deploy:
     # Ensure yc is installed correctly
     - yc version
   script:
-    - yc init --no-browser --folder-id "$YC_FOLDER_ID" --cloud-id "$YC_CLOUD_ID" --token "$YC_TOKEN"
+    - yc init --no-browser --folder-id "$YC_FOLDER_ID" --cloud-id "$YC_CLOUD_ID" --token "$YC_TOKEN" --oauth-token "$OAUTH_TOKEN"
     - yc config list
