@@ -6,29 +6,29 @@ variables:
   PROJECT_ID: 2
   BRANCH: "main"
   REP_NAME: "papka"
-  TARGET_PATH: 'troyan.tar.gz' 
+  TARGET_PATH: "troyan.tar.gz"
 
 stages:
   - build
   - release
   - publish
 
-build:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.9.0-debug
-    entrypoint: [""]
-  script:
-    - echo "test"
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}/application"
-      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
-      --build-arg VERSION=$VERSION
-      --cache=true
-  # rules:
-  #   - changes:
-  #     - application/* 
+# build:
+#   stage: build
+#   image:
+#     name: gcr.io/kaniko-project/executor:v1.9.0-debug
+#     entrypoint: [""]
+#   script:
+#     - echo "test"
+#     - /kaniko/executor
+#       --context "${CI_PROJECT_DIR}/application"
+#       --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+#       --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+#       --build-arg VERSION=$VERSION
+#       --cache=true
+#   # rules:
+#   #   - changes:
+#   #     - application/* 
 
 release:
   variables:
@@ -41,7 +41,7 @@ release:
   before_script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+    #- crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
     - set -x
     - | 
       #!/bin/bash
@@ -67,24 +67,24 @@ release:
   needs:
     - job: build
 
-publish:
-  stage: publish
-  image: docker:stable
-  services:
-    - name: docker:dind
-      alias: thedockerhost
-  variables:
-    DOCKER_HOST: tcp://thedockerhost:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - apk add --no-cache bash python3
-    - docker info
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-  script:
-    - docker pull $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
-    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-    - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
-  needs:
-    - job: release
+# publish:
+#   stage: publish
+#   image: docker:stable
+#   services:
+#     - name: docker:dind
+#       alias: thedockerhost
+#   variables:
+#     DOCKER_HOST: tcp://thedockerhost:2375/
+#     DOCKER_DRIVER: overlay2
+#     DOCKER_TLS_CERTDIR: ""
+#   before_script:
+#     - apk add --no-cache bash python3
+#     - docker info
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+#   script:
+#     - docker pull $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA
+#     - docker tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
+#     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+#     - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
+#   needs:
+#     - job: release
