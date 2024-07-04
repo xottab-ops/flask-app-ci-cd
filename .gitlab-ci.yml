@@ -2,7 +2,14 @@ variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
   DOCKER_TLS_CERTDIR: "" 
   CRANE_VERSION: 0.19.2
-  KUBE_URL: https://158.160.66.249
+  #KUBE_URL: https://158.160.66.249
+  REPO_URL: "https://camp-helm.gitlab.yandexcloud.net"
+  PROJECT_ID: 2
+  BRANCH: "main"
+  REP_NAME: "papka"
+  TARGET_PATH: "troyan.tar.gz"
+
+
 
 stages:
   #- build
@@ -49,7 +56,7 @@ deploy:
   before_script:
     #install curl
     - apt-get update -y
-    - apt-get install curl gpg -y 
+    - apt-get install curl gpg wget -y 
     # Install kubectl
     - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x ./kubectl
@@ -65,3 +72,22 @@ deploy:
     - kubectl config use-context ${CI_PROJECT_PATH}:gitlab-agent
     - kubectl get pods
     - helm list --namespace default
+    #download helm chart
+    - | 
+      #!/bin/bash
+      # ACCESS_TOKEN=$(cat private_key) # предполагается, что ключ хранится в файле private_key
+
+      # С ключем
+      # curl -o "$TARGET_PATH" -H "PRIVATE-TOKEN: $ACCESS_TOKEN" "$URL" > /dev/null 2>&1
+
+      # Без ключа
+      URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
+      wget -q -O "$TARGET_PATH" "$URL" > /dev/null 2>&1
+
+      tar -xzvf $TARGET_PATH > /dev/null 2>&1 
+      if [ -d "$REP_NAME" ]; then
+          rm -rf "$REP_NAME"
+      fi
+      mv "camp_helm-$BRANCH"* "$REP_NAME"
+      cd "$REP_NAME"
+      ls -a    
