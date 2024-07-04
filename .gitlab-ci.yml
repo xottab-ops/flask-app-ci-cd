@@ -59,7 +59,7 @@ deploy:
     - mv ./kubectl /usr/local/bin/kubectl
   script:
     - | 
-      URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
+      URL="https://camp-helm.gitlab.yandexcloud.net/api/v4/projects/2/repository/archive.tar.gz?sha=main"
       wget -q -O "$TARGET_PATH" "$URL" > /dev/null 2>&1
 
       tar -xzvf $TARGET_PATH > /dev/null 2>&1 
