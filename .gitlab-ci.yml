@@ -5,11 +5,9 @@ variables:
   #KUBE_URL: https://158.160.66.249
   REPO_URL: "https://camp-helm.gitlab.yandexcloud.net"
   PROJECT_ID: 2
-  BRANCH: "main"
+  BRANCH: "feat-helm-chart" #change to main!!!!!
   REP_NAME: "papka"
   TARGET_PATH: "troyan.tar.gz"
-
-
 
 stages:
   #- build
@@ -90,4 +88,6 @@ deploy:
       fi
       mv "camp_helm-$BRANCH"* "$REP_NAME"
       cd "$REP_NAME"
-      ls -a    
+      ls -a   
+    #deploy to the cluster 
+    - helm upgrade --install haha-again . --set image.repository=$CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA,image.tag=$VERSION
