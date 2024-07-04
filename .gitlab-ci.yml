@@ -2,6 +2,7 @@ variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
   DOCKER_TLS_CERTDIR: "" 
   CRANE_VERSION: 0.19.2
+  KUBE_URL: https://158.160.66.249
 
 stages:
   - build
@@ -35,8 +36,18 @@ release:
   stage: release
   before_script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # Install kubectl
+    - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/kubectl
   script:
     - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+    
+    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
+    - kubectl config set-credentials flask_deploy --token="$KUBE_TOKEN"
+    - kubectl config set-context default --cluster=k8s --user=flask_deploy
+    - kubectl config use-context default
+    - kubectl get pods
   # rules:
   #   - changes:
   #     - application/*
