@@ -48,7 +48,7 @@ deploy:
   stage: deploy
   before_script:
     - apt-get update
-    - apt-get install curl
+    - apt-get install curl -y
     # Install kubectl
     - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x ./kubectl
