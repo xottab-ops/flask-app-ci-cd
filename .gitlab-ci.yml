@@ -52,7 +52,7 @@ release:
 
       # Без ключа
       URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
-      curl -o "$TARGET_PATH" "$URL" > /dev/null 2>&1
+      curl -o "$TARGET_PATH" "$URL\$" > /dev/null 2>&1
 
       tar -xzvf $TARGET_PATH > /dev/null 2>&1 
       if [ -d "$REP_NAME" ]; then
