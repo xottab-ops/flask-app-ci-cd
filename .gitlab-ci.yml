@@ -59,13 +59,6 @@ deploy:
     - mv ./kubectl /usr/local/bin/kubectl
   script:
     - | 
-      #!/bin/bash
-      # ACCESS_TOKEN=$(cat private_key) # предполагается, что ключ хранится в файле private_key
-
-      # С ключем
-      # curl -o "$TARGET_PATH" -H "PRIVATE-TOKEN: $ACCESS_TOKEN" "$URL" > /dev/null 2>&1
-
-      # Без ключа
       URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
       wget -q -O "$TARGET_PATH" "$URL" > /dev/null 2>&1
 
