@@ -49,13 +49,13 @@ deploy:
   before_script:
     - apt-get update
     - apt-get install curl -y
-    # Install kubectl
-    - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-    - chmod +x ./kubectl
-    - mv ./kubectl /usr/local/bin/kubectl
+    # Download and install the yc CLI
+    - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+    - export PATH="$HOME/yandex-cloud/bin:$PATH"
+    # Ensure yc is installed correctly
+    - yc version
   script:
-    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
-    - kubectl config set-credentials flask_deploy --token="$KUBE_TOKEN"
-    - kubectl config set-context default --cluster=k8s --user=flask_deploy
-    - kubectl config use-context default
-    - kubectl get pods
+    # Initialize yc with the provided environment variables 
+    - yc init --no-browser --folder-id $YC_FOLDER_ID --cloud-id $YC_CLOUD_ID --token $YC_TOKEN
+    # Verify initialization
+    - yc config list
