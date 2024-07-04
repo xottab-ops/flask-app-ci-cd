@@ -64,8 +64,8 @@ release:
       # rules:
   #   - changes:
   #     - application/*
-  needs:
-    - job: build
+  # needs:
+  #   - job: build
 
 # publish:
 #   stage: publish
