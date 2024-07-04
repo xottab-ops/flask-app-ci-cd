@@ -9,26 +9,26 @@ variables:
   TARGET_PATH: "troyan.tar.gz"
 
 stages:
-  # - build
+  - build
   - release
-  # - publish
+  - publish
 
-# build:
-#   stage: build
-#   image:
-#     name: gcr.io/kaniko-project/executor:v1.9.0-debug
-#     entrypoint: [""]
-#   script:
-#     - echo "test"
-#     - /kaniko/executor
-#       --context "${CI_PROJECT_DIR}/application"
-#       --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
-#       --build-arg VERSION=$VERSION
-#       --cache=true
-#   # rules:
-#   #   - changes:
-#   #     - application/* 
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "test"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application"
+      --dockerfile "${CI_PROJECT_DIR}/application/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/application:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+  # rules:
+  #   - changes:
+  #     - application/* 
 
 release:
   variables:
@@ -52,9 +52,7 @@ release:
 
       # Без ключа
       URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
-      # curl -o "$TARGET_PATH" "$URL" > /dev/null 2>&1
-      wget -q -O "$TARGET_PATH" 'https://camp-helm.gitlab.yandexcloud.net/api/v4/projects/2/repository/archive.tar.gz?sha=main' > /dev/null 2>&1
-
+      wget -q -O "$TARGET_PATH" "$URL" > /dev/null 2>&1
 
       tar -xzvf $TARGET_PATH > /dev/null 2>&1 
       if [ -d "$REP_NAME" ]; then
@@ -66,27 +64,27 @@ release:
       # rules:
   #   - changes:
   #     - application/*
-  # needs:
-  #   - job: build
+  needs:
+    - job: build
 
-# publish:
-#   stage: publish
-#   image: docker:stable
-#   services:
-#     - name: docker:dind
-#       alias: thedockerhost
-#   variables:
-#     DOCKER_HOST: tcp://thedockerhost:2375/
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_TLS_CERTDIR: ""
-#   before_script:
-#     - apk add --no-cache bash python3
-#     - docker info
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#   script:
-#     - docker pull $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA
-#     - docker tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
-#     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-#     - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
-#   needs:
-#     - job: release
+publish:
+  stage: publish
+  image: docker:stable
+  services:
+    - name: docker:dind
+      alias: thedockerhost
+  variables:
+    DOCKER_HOST: tcp://thedockerhost:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - apk add --no-cache bash python3
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker pull $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$VERSION
+  needs:
+    - job: release
