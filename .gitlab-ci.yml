@@ -45,15 +45,8 @@ stages:
 #     - job: build
 
 deploy:
+  image: bitnami/kubectl:latest
   stage: deploy
-  before_script:
-    - apt-get update
-    - apt-get install curl -y
-    # Download and install the yc CLI
-    - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-    - export PATH="$HOME/yandex-cloud/bin:$PATH"
-    # Ensure yc is installed correctly
-    - yc version
   script:
-    - yc init --token $YC_TOKEN --cloud-id $CLOUD_ID --folder-id $FOLDER_ID
-    - yc config list
+    - kubectl config use-context ${CI_PROJECT_PATH}:<имя_GitLab_Agent>
+    - kubectl get pods
