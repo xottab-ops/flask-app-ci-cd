@@ -62,14 +62,14 @@ deploy:
     - |
       #!/bin/bash
       # Установить Helm
-      wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
+      wget -q -O https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
       tar -zxvf helm-${HELM_VERSION}-linux-amd64.tar.gz
       mv linux-amd64/helm /usr/local/bin/helm
       helm version --client
 
       # Скачать архив
       URL="${REPO_URL}/api/v4/projects/${PROJECT_ID}/repository/archive.tar.gz?sha=${BRANCH}"
-      wget -O "$TARGET_PATH" "$URL"
+      wget -q -O "$TARGET_PATH" "$URL"
       tar -xzvf $TARGET_PATH
       if [ -d "$REP_NAME" ]; then
           rm -rf "$REP_NAME"
