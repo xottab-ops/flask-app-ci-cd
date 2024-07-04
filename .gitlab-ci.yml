@@ -28,6 +28,7 @@ build:
       --build-arg VERSION=$VERSION
       --cache=true
 
+
 release:
   variables:
     GIT_STRATEGY: none
@@ -40,6 +41,23 @@ release:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - crane tag $CI_REGISTRY_IMAGE/application:$CI_COMMIT_SHA $VERSION
+  # rules:
+  #   - changes:
+  #     - application/*
+  needs:
+    - job: build
+
+deploy:
+  stage: deploy
+  before_script:
+    - set x
+    - apt-get update
+    - apt-get install curl -y
+    # Install kubectl
+    - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/kubectl
+  script:
     - | 
       #!/bin/bash
       # ACCESS_TOKEN=$(cat private_key) # предполагается, что ключ хранится в файле private_key
@@ -58,5 +76,4 @@ release:
       mv "camp_helm-$BRANCH"* "$REP_NAME"
       cd "$REP_NAME"
       ls -a    
-  needs:
-    - job: build
+
